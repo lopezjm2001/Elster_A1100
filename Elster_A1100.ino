@@ -18,7 +18,8 @@ volatile uint8_t out;
 volatile unsigned long last_us;
 uint8_t dbug = 0;
 
-ISR(INT0_vect) {
+//ISR(INT0_vect) {  //will not work with ESP8266 D1R2 from Wemos
+void onPulse()  {
    unsigned long us = micros();
    unsigned long diff = us - last_us;
    if (diff > 20 ) {
@@ -34,8 +35,9 @@ void setup() {
     //pinMode(intPin, INPUT);
     in = out = 0; 
     Serial.begin(115200);
-    EICRA |= 3;    //RISING interrupt
-    EIMSK |= 1;    
+    attachInterrupt(12, onPulse, RISING);   //D6 on ESP8266wifi R1D2.
+//    EICRA |= 3;    //RISING interrupt  //will not work with ESP8266 D1R2 from Wemos
+//    EIMSK |= 1;    //will not work with ESP8266 D1R2 from Wemos
     if (dbug) Serial.print("Start ........\r\n");
     last_us = micros();
 }
