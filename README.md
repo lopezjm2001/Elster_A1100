@@ -13,5 +13,5 @@ This project uses a Wemos ESP8266 D1R2 from ebay http://www.ebay.com.au/itm/WeMo
 
   Based on Dave's code to read an elter a100c for more info on that vist:
   http://www.rotwang.co.uk/projects/meter.html
-  Thanks Dave.
+  Thanks Dave and Pedro.
 
