@@ -556,3 +556,4 @@ void print2digits(int number) {  // used for RTC module to append '0' to single 
   }
   if (dbug) Serial.print(number);
 }
+
