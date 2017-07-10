@@ -14,7 +14,7 @@
 
   Based on Dave's code to read an elter a100c for more info on that vist:
   http://www.rotwang.co.uk/projects/meter.html
-  Thanks Dave.
+  Thanks Dave and Pedro.
 */         
 // IMPOTANT: The RPM7138-R is a sensitive device so be carefull of static, heat and scratching the lense.
 
@@ -68,6 +68,8 @@ float imports;
 float exports;
 float lastimports;
 float lastexports;
+float incexports;
+float incimports;
 float lastsFlag = 2;
 float last_data;
 uint8_t sFlag;
@@ -89,8 +91,9 @@ int sodexports = 0;
 int todayexports = 0;
 int past1 = 0;
 int past2 = 0;
-int counter = 0;
-int countervalue = 10000000;  // Time to get out of decodebuff subroutine
+long counter = 0;
+long countermem = 0;
+int countervalue = 20000000;  // Time to get out of decodebuff subroutine
 uint8_t dw = 0;   //diagnostics
 uint8_t dbug = 1;  //debugging
 
@@ -130,15 +133,16 @@ void sendGET() // send data to www.pvoutput.org
     Serial.println("DATE: " + String(currentyear) + "/" + months + "/" + days);
     Serial.println("TIME: " + hours + ":" + mins);
   }
-  if (client.connect(servername, 80)) {  //Send to pvoutput
+  if (client.connect(servername, 80)) {  //Send Elster data to www.pvoutput.org
     if (dbug) {
       Serial.println("connected");
       //      Serial.println(Directory + "?key=" + MyKey + "&sid=" + MySID + "&d=" + currentyear + months + days + "&t=" + hours + ":" + mins + "&v1=" + EG + "&v2=" + PG + "&v3=" + EU + "&v4=" + PU + "&v5=" + Temp + "&v6=" + volts + "&v7=" + IMP);
-      Serial.println(Directory + "?key=" + MyKey + "&sid=" + MySID + "&d=" + currentyear + months + days + "&t=" + hours + ":" + mins + "&v1=" + EG + "&v2=" + PG + "&v3=" + EU + "&v4=" + PU + "&v7=" + exports + "&v8=" + imports + "&v9=" + statusFlag + "&v10=" + todayexports + "&v11=" + todayimports);
+      Serial.println(Directory + "?key=" + MyKey + "&sid=" + MySID + "&d=" + currentyear + months + days + "&t=" + hours + ":" + mins + "&v1=" + EG + "&v2=" + PG + "&v3=" + EU + "&v4=" + PU + "&v6=" + statusFlag + "&v7=" + exports + "&v8=" + imports + "&v9=" + statusFlag + "&v10=" + todayexports + "&v11=" + todayimports + "&v12=" + countermem);
     }
     //      client.println(Directory + "?key=" + MyKey + "&sid=" + MySID + "&d=" + currentyear + months + days + "&t=" + hours + ":" + mins + "&v1=" + EG + "&v2=" + PG + "&v3=" + EU + "&v4=" + PU + "&v5=" + Temp + "&v6=" + volts + "&v7=" + IMP);
-    client.println(Directory + "?key=" + MyKey + "&sid=" + MySID + "&d=" + currentyear + months + days + "&t=" + hours + ":" + mins + "&v1=" + EG + "&v2=" + PG + "&v3=" + EU + "&v4=" + PU + "&v7=" + exports + "&v8=" + imports + "&v9=" + statusFlag + "&v10=" + todayexports + "&v11=" + todayimports);
+    client.println(Directory + "?key=" + MyKey + "&sid=" + MySID + "&d=" + currentyear + months + days + "&t=" + hours + ":" + mins + "&v1=" + EG + "&v2=" + PG + "&v3=" + EU + "&v4=" + PU + "&v6=" + statusFlag + "&v7=" + exports + "&v8=" + imports + "&v9=" + statusFlag + "&v10=" + todayexports + "&v11=" + todayimports + "&v12=" + countermem);
     client.println(); //end of get request
+    countermem = 0;
   }
   else {
     if (dbug) {
@@ -191,7 +195,6 @@ void meterupdate() {
     PG = "0";
   }
 
-
   EG = (TotalkWhexp * 1000); //Energy Generated
 
   EU = (TotalkWhimp * 1000);  //Energy Used
@@ -208,6 +211,14 @@ void meterupdate() {
   }
   if (currenthour == 0 && currentminute == 2 && past2 == 1) past2 = 0;
 
+  if (sodexports == 0) {
+    incexports = exports - lastexports;
+    todayexports = todayexports + incexports;
+  }
+ if (sodimports == 0) {
+    incimports = imports - lastimports;
+    todayimports = todayimports + incimports;
+  }
   if (sodexports != 0) todayexports = exports - sodexports;
   if (sodimports != 0) todayimports = imports - sodimports;
 
@@ -232,19 +243,9 @@ void meterupdate() {
       Serial.print("Energy Exported Today (pulses): ");
       Serial.print(TotalkWhexp, 3);
       Serial.println(" kwh ");
-      Serial.print("Total Import: ");
-      Serial.print(imports);
-      Serial.println(" kWh");
-      Serial.print("Total Export: ");
-      Serial.print(exports);
-      Serial.println(" kWh");
       Serial.print("Flag: ");
       if (statusFlag == 1) Serial.println("Exporting");
       if (statusFlag == 0) Serial.println("Importing");
-      Serial.print("Exports Today IFRD: ");
-      Serial.println(todayexports);
-      Serial.print("Imports Today IFRD: ");
-      Serial.println(todayimports);
       Serial.print("Time: ");
       Serial.print(currenthour);
       Serial.print(":");
@@ -295,6 +296,7 @@ void loop() {
   int rd = decode_buff();     // Infrared sensor RPM7138-R loop
   counter = counter + 1;
   if ((!rd) && (counter < countervalue)) return;
+  countermem = counter;
   counter = 0;
   if (rd == 3) {
     rd = 4;
@@ -330,15 +332,22 @@ void loop() {
     lastsFlag = statusFlag;
     if (dbug) {
       Serial.println("");
-      Serial.print("Total Import: ");
+      Serial.print("Total Import IFrD: ");
       Serial.print(imports);
       Serial.println(" kWh");
-      Serial.print("Total Export: ");
+      Serial.print("Total Export IFrD: ");
       Serial.print(exports);
       Serial.println(" kWh");
       Serial.print("Flag: ");
       if (statusFlag == 1) Serial.println("Exporting");
       if (statusFlag == 0) Serial.println("Importing");
+      Serial.print("Imports Today IFrD: ");
+      Serial.print(todayimports);
+      Serial.println(" kWh");
+      Serial.print("Exports Today IFrD: ");
+      Serial.print(todayexports);
+      Serial.println(" kWh");
+      Serial.println(countermem);     
       Serial.println(" ");
     }
   }
@@ -374,9 +383,9 @@ void loop() {
 }
 //--------------------------------------------------------------------------------------------------------------------
 static int decode_buff(void) {    // Infrared sensor RPM7138-R
-//  if (dbug) {
-//    if (counter == (countervalue - 1)) Serial.println("Timed out");
-//  }
+  if (dbug) {
+    if (counter == (countervalue - 1)) Serial.println("Timed out");
+  }
   if (in == out) {
     if (dw) Serial.print(".");
     //   if (dw) Serial.print(counter);
@@ -547,4 +556,3 @@ void print2digits(int number) {  // used for RTC module to append '0' to single 
   }
   if (dbug) Serial.print(number);
 }
-
