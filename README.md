@@ -13,8 +13,10 @@ And these parts:
  
   This project is based on https://pedrosnotes.wordpress.com/ which uses an Arduino UNO.
   
-  This project uses a Wemos ESP8266 D1R2 which is Arduino compatible and has WIFI which can be used to
-  upload the Elster A1100 data to www.pvoutput.org. Also uses an RTC and a light sensitive switch device. 
+  This project uses a Wemos ESP8266 D1R2 which is Arduino compatible and has WIFI which is used to
+  upload the Elster A1100 data to www.pvoutput.org. You can see mine here https://pvoutput.org/intraday.jsp?id=50165&sid=51923
+  
+  Also uses an RTC and a light sensitive switch device. 
   
   http://www.ebay.com.au/itm/Photosensitive-Detector-Light-Photo-Sensitive-Switch-Sensor-Module-Arduino-Part/161869818445?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m1438.l2649
   
