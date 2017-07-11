@@ -2,7 +2,7 @@
   This project uses a Wemos ESP8266 D1R2 from ebay http://www.ebay.com.au/itm/WeMos-D1-R2-Latest-ESP-12E-WiFi-ESP8266-Board-Arduino-IDE-Uno-SYDNEY/272385909659?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m2749.l2649
   This project is based on https://pedrosnotes.wordpress.com/ which uses an Arduino UNO.
   This project uses a Wemos ESP8266 D1R2 which is Arduino compatible and has WIFI which can be used to
-  upload the Elster A1100 data to www.pvoutput.org. Also uses an RTC and a light sensitive switch device. 
+  upload the Elster A1100 data to www.pvoutput.org. Also uses an RTC and a light sensitive switch device.
   http://www.ebay.com.au/itm/Photosensitive-Detector-Light-Photo-Sensitive-Switch-Sensor-Module-Arduino-Part/161869818445?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m1438.l2649
   http://www.ebay.com.au/itm/ZS042-DS3231-AT24C32-IIC-module-precision-Real-time-clock-quare-memory-Arduino/221549752451?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m2749.l2649
   This code has been tested with a Wemos ESP8266 D1R2 wiring a comercial infrared sesor RPM7138-R from Jaycar Cat.No. ZD1952.
@@ -15,7 +15,7 @@
   Based on Dave's code to read an elter a100c for more info on that vist:
   http://www.rotwang.co.uk/projects/meter.html
   Thanks Dave and Pedro.
-*/         
+*/
 // IMPOTANT: The RPM7138-R is a sensitive device so be carefull of static, heat and scratching the lense.
 
 #include <ESP8266WiFi.h>
@@ -63,14 +63,20 @@ volatile long data[BUFF_SIZE];
 volatile uint8_t in;
 volatile uint8_t out;
 volatile unsigned long last_us;
-unsigned int statusFlag = 2;
+unsigned int statusFlag = 0;
 float imports;
 float exports;
 float lastimports;
 float lastexports;
 float incexports;
 float incimports;
-float lastsFlag = 2;
+float eodimports;
+float sodimports;
+float todayimports;
+float eodexports;
+float sodexports;
+float todayexports;
+float lastsFlag;
 float last_data;
 uint8_t sFlag;
 float imps;
@@ -83,17 +89,12 @@ uint8_t pSum = 0;
 uint16_t BCC = 0;
 uint8_t eom = 1;
 int over = 0;
-int eodimports = 0;
-int sodimports = 0;
-int todayimports = 0;
-int eodexports = 0;
-int sodexports = 0;
-int todayexports = 0;
+
 int past1 = 0;
 int past2 = 0;
 long counter = 0;
 long countermem = 0;
-int countervalue = 20000000;  // Time to get out of decodebuff subroutine
+int countervalue = 10000000;  // Time to get out of decodebuff subroutine
 uint8_t dw = 0;   //diagnostics
 uint8_t dbug = 1;  //debugging
 
@@ -199,29 +200,6 @@ void meterupdate() {
 
   EU = (TotalkWhimp * 1000);  //Energy Used
 
-  if (currenthour == 0 && currentminute == 1 && past1 == 0) {
-    sodexports = exports;
-    past1 = 1;
-  }
-  if (currenthour == 0 && currentminute == 2 && past1 == 1) past1 = 0;
-
-  if (currenthour == 0 && currentminute == 1 && past2 == 0) {
-    sodimports = imports;
-    past2 = 1;
-  }
-  if (currenthour == 0 && currentminute == 2 && past2 == 1) past2 = 0;
-
-  if (sodexports == 0) {
-    incexports = exports - lastexports;
-    todayexports = todayexports + incexports;
-  }
- if (sodimports == 0) {
-    incimports = imports - lastimports;
-    todayimports = todayimports + incimports;
-  }
-  if (sodexports != 0) todayexports = exports - sodexports;
-  if (sodimports != 0) todayimports = imports - sodimports;
-
   sei();    //enable interrupts
 
   if (dbug) {
@@ -305,31 +283,60 @@ void loop() {
       imports = lastimports;
       exports = lastexports;
     }
+
     if (lastimports == 0) lastimports = imports;
+
     if (imports > (lastimports + 40)) {
       imports = lastimports;  //filter
       exports = lastexports;
       statusFlag = lastsFlag;
     }
+
     if (imports < 0)  {
       imports = lastimports;
       exports = lastexports;
       statusFlag = lastsFlag;
     }
     if (lastexports == 0) lastexports = exports;
-    if (exports > (lastexports + 40)) {
-      exports = lastexports;  //filter
-      imports = lastimports;
-      statusFlag = lastsFlag;
-    }
-    if (exports < 0) {
+
+    if (exports > (lastexports + 40)) {  //filter
       exports = lastexports;
       imports = lastimports;
       statusFlag = lastsFlag;
     }
+    if (exports < 0) {  //filter
+      exports = lastexports;
+      imports = lastimports;
+      statusFlag = lastsFlag;
+    }
+    if (currenthour == 0 && currentminute == 1 && past1 == 0) {
+      sodexports = exports;
+      past1 = 1;
+    }
+    if (currenthour == 0 && currentminute == 2 && past1 == 1) past1 = 0;
+
+    if (currenthour == 0 && currentminute == 1 && past2 == 0) {
+      sodimports = imports;
+      past2 = 1;
+    }
+    if (currenthour == 0 && currentminute == 2 && past2 == 1) past2 = 0;
+
+
+    if (sodexports == 0) {
+      incexports = exports - lastexports;
+      todayexports = todayexports + incexports;
+    }
+    if (sodimports == 0) {
+      incimports = imports - lastimports;
+      todayimports = todayimports + incimports;
+    }
+    if (sodexports != 0) todayexports = exports - sodexports;
+    if (sodimports != 0) todayimports = imports - sodimports;
+
     lastimports = imports;
     lastexports = exports;
     lastsFlag = statusFlag;
+
     if (dbug) {
       Serial.println("");
       Serial.print("Total Import IFrD: ");
@@ -342,12 +349,12 @@ void loop() {
       if (statusFlag == 1) Serial.println("Exporting");
       if (statusFlag == 0) Serial.println("Importing");
       Serial.print("Imports Today IFrD: ");
-      Serial.print(todayimports);
+      Serial.print(todayimports, 1);
       Serial.println(" kWh");
       Serial.print("Exports Today IFrD: ");
-      Serial.print(todayexports);
+      Serial.print(todayexports, 1);
       Serial.println(" kWh");
-      Serial.println(countermem);     
+      Serial.println(countermem);
       Serial.println(" ");
     }
   }
@@ -355,29 +362,29 @@ void loop() {
   meterupdate();
   readRTC();
   if (currentminute == 0 && over == 0) sendGET();
-  if (currentminute == 1 && over == 1) over = 0;
+  if (currentminute > 0 && currentminute < 5 && over == 1) over = 0;
   if (currentminute == 5 && over == 0) sendGET();
-  if (currentminute == 6 && over == 1) over = 0;
+  if (currentminute > 5 && currentminute < 10 && over == 1) over = 0;
   if (currentminute == 10 && over == 0) sendGET();
-  if (currentminute == 11 && over == 1) over = 0;
+  if (currentminute > 10 && currentminute < 15 && over == 1) over = 0;
   if (currentminute == 15 && over == 0) sendGET();
-  if (currentminute == 16 && over == 1) over = 0;
+  if (currentminute > 15 && currentminute < 20 && over == 1) over = 0;
   if (currentminute == 20 && over == 0) sendGET();
-  if (currentminute == 21 && over == 1) over = 0;
+  if (currentminute > 20 && currentminute < 25 && over == 1) over = 0;
   if (currentminute == 25 && over == 0) sendGET();
-  if (currentminute == 26 && over == 1) over = 0;
+  if (currentminute > 25 && currentminute < 30 && over == 1) over = 0;
   if (currentminute == 30 && over == 0) sendGET();
-  if (currentminute == 31 && over == 1) over = 0;
+  if (currentminute > 30 && currentminute < 35 && over == 1) over = 0;
   if (currentminute == 35 && over == 0) sendGET();
-  if (currentminute == 36 && over == 1) over = 0;
+  if (currentminute > 35 && currentminute < 40 && over == 1) over = 0;
   if (currentminute == 40 && over == 0) sendGET();
-  if (currentminute == 41 && over == 1) over = 0;
+  if (currentminute > 40 && currentminute < 45 && over == 1) over = 0;
   if (currentminute == 45 && over == 0) sendGET();
-  if (currentminute == 46 && over == 1) over = 0;
+  if (currentminute > 45 && currentminute < 50 && over == 1) over = 0;
   if (currentminute == 50 && over == 0) sendGET();
-  if (currentminute == 51 && over == 1) over = 0;
+  if (currentminute > 50 && currentminute < 55 && over == 1) over = 0;
   if (currentminute == 55 && over == 0) sendGET();
-  if (currentminute == 56 && over == 1) over = 0;
+  if (currentminute > 55 && currentminute < 59 && over == 1) over = 0;
 
   if (dbug) Serial.println(" "), digitalClockDisplay();
 }
@@ -419,7 +426,7 @@ static int decode_buff(void) {    // Infrared sensor RPM7138-R
   if (pSum >= 10) {
     idx++;
     if (idx != 328) BCC = (BCC + byt_msg) & 255;
-    //   if (dbug) Serial.print("["); Serial.print(idx); Serial.print(":"); Serial.print(byt_msg, HEX); Serial.println("]");
+    //       if (dbug) Serial.print("["); Serial.print(idx); Serial.print(":"); Serial.print(byt_msg, HEX); Serial.println("]");
     if (idx >= 95 && idx <= 101)
       imps += ((float)byt_msg - 48) * pow(10 , (101 - idx));
     if (idx == 103)
@@ -556,4 +563,3 @@ void print2digits(int number) {  // used for RTC module to append '0' to single 
   }
   if (dbug) Serial.print(number);
 }
-
