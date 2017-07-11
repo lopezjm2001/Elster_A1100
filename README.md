@@ -1,6 +1,8 @@
 # Elster_A1100
 Arduino sketch to decode IR data from the IRDA port in the Elster electicity meter
 
+Photo of my setup https://drive.google.com/open?id=0B73QqrlATOVmOV9iQktmT0NuSVU
+
 Using this IR receiver:
 http://www.jaycar.com.au/Active-Components/Optoelectronics/Optocouplers/5mm-Infrared-Receiver/p/ZD1952
  actually the spec sheet is found as RPM7138-R
@@ -21,8 +23,8 @@ And these parts:
 some info here :
 http://forums.whirlpool.net.au/forum-replies.cfm?t=2291936&p=2
 
-I'm writting my notes on the project here:
+Notes on the project here:
 https://pedrosnotes.wordpress.com/2015/09/26/decoding-electricity-meter-elster-a1100-first-steps/
 
-
+Thanks David and Pedro.
 
