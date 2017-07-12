@@ -1,4 +1,7 @@
 # Elster_A1100
+
+You can find project details at https://wordpress.com/read/feeds/68572272/posts/1524193538
+
 Arduino sketch to decode IR data from the IRDA port in the Elster electicity meter
 
 Photo of my setup https://drive.google.com/open?id=0B73QqrlATOVmOV9iQktmT0NuSVU
