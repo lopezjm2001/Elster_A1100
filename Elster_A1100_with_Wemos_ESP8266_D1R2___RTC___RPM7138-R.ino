@@ -1,8 +1,11 @@
-/*
+/**
+  You can see details of this project at https://wordpress.com/read/feeds/68572272/posts/1524193538
   This project uses a Wemos ESP8266 D1R2 from ebay http://www.ebay.com.au/itm/WeMos-D1-R2-Latest-ESP-12E-WiFi-ESP8266-Board-Arduino-IDE-Uno-SYDNEY/272385909659?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m2749.l2649
   This project is based on https://pedrosnotes.wordpress.com/ which uses an Arduino UNO.
-  This project uses a Wemos ESP8266 D1R2 which is Arduino compatible and has WIFI which can be used to
-  upload the Elster A1100 data to www.pvoutput.org. Also uses an RTC and a light sensitive switch device.
+  A photo of my setup is here: https://drive.google.com/open?id=0B73QqrlATOVmOV9iQktmT0NuSVU
+  This project uses a Wemos ESP8266 D1R2 which is Arduino compatible and has WIFI which is used to
+  upload the Elster A1100 data to www.pvoutput.org. You can see mine here https://pvoutput.org/intraday.jsp?id=50165&sid=51923
+  Also uses an RTC and a light sensitive switch device.
   http://www.ebay.com.au/itm/Photosensitive-Detector-Light-Photo-Sensitive-Switch-Sensor-Module-Arduino-Part/161869818445?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m1438.l2649
   http://www.ebay.com.au/itm/ZS042-DS3231-AT24C32-IIC-module-precision-Real-time-clock-quare-memory-Arduino/221549752451?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m2749.l2649
   This code has been tested with a Wemos ESP8266 D1R2 wiring a comercial infrared sesor RPM7138-R from Jaycar Cat.No. ZD1952.
@@ -92,8 +95,8 @@ int over = 0;
 
 int past1 = 0;
 int past2 = 0;
-long counter = 0;
-long countermem = 0;
+int counter = 0;
+int countermem = 0;
 int countervalue = 10000000;  // Time to get out of decodebuff subroutine
 uint8_t dw = 0;   //diagnostics
 uint8_t dbug = 1;  //debugging
@@ -273,7 +276,7 @@ void setup() {
 void loop() {
   int rd = decode_buff();     // Infrared sensor RPM7138-R loop
   counter = counter + 1;
-  if ((!rd) && (counter < countervalue)) return;
+  if ((!rd) && (counter < countervalue)) return; //IFrD counter
   countermem = counter;
   counter = 0;
   if (rd == 3) {
@@ -286,13 +289,13 @@ void loop() {
 
     if (lastimports == 0) lastimports = imports;
 
-    if (imports > (lastimports + 40)) {
-      imports = lastimports;  //filter
+    if (imports > (lastimports + 40)) {  //filter
+      imports = lastimports;  
       exports = lastexports;
       statusFlag = lastsFlag;
     }
 
-    if (imports < 0)  {
+    if (imports < 0)  {         //filter
       imports = lastimports;
       exports = lastexports;
       statusFlag = lastsFlag;
@@ -304,7 +307,7 @@ void loop() {
       imports = lastimports;
       statusFlag = lastsFlag;
     }
-    if (exports < 0) {  //filter
+    if (exports < 0) {              //filter
       exports = lastexports;
       imports = lastimports;
       statusFlag = lastsFlag;
@@ -391,7 +394,7 @@ void loop() {
 //--------------------------------------------------------------------------------------------------------------------
 static int decode_buff(void) {    // Infrared sensor RPM7138-R
   if (dbug) {
-    if (counter == (countervalue - 1)) Serial.println("Timed out");
+    if (counter == (countervalue - 1)) Serial.println("Timed out");  //IFrD counter
   }
   if (in == out) {
     if (dw) Serial.print(".");
