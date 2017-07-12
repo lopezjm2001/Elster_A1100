@@ -1,4 +1,7 @@
+You can find details of this project at https://wordpress.com/read/feeds/68572272/posts/1524193538
+
 This project uses a Wemos ESP8266 D1R2 from ebay http://www.ebay.com.au/itm/WeMos-D1-R2-Latest-ESP-12E-WiFi-ESP8266-Board-Arduino-IDE-Uno-SYDNEY/272385909659?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2060353.m2749.l2649
+
   This project is based on https://pedrosnotes.wordpress.com/ which uses an Arduino UNO.
   This project uses a Wemos ESP8266 D1R2 which is Arduino compatible and has WIFI which will be used to
   upload the Elster A1100 data to www.pvoutput.org. Also uses an RTC and a light sensitive switch device. 
